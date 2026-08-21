@@ -389,11 +389,24 @@ html.dark .config-code-box{background:rgba(0,0,0,0.35);color:var(--text);border-
   z-index:35;
   display:flex;gap:8px;align-items:center;
 }
-#search-input{
+.search-input-wrapper{
+  position:relative;
   flex:1;
+  display:flex;
+  align-items:center;
+}
+.search-leading-icon{
+  position:absolute;
+  left:14px;
+  color:var(--text-secondary);
+  pointer-events:none;
+  transition:color .2s;
+}
+#search-input{
+  width:100%;
   height:44px;
-  padding:0 16px;
-  font-size:16px;font-weight:400;
+  padding:0 38px 0 38px;
+  font-size:15px;font-weight:400;
   color:var(--text);
   background:var(--glass-light);
   backdrop-filter:var(--blur-md);
@@ -403,13 +416,28 @@ html.dark .config-code-box{background:rgba(0,0,0,0.35);color:var(--text);border-
   border-radius:var(--r-sm);
   transition:all 0.3s var(--bounce);
 }
-#search-input::placeholder{color:var(--text-secondary);}
+#search-input::placeholder{color:var(--text-secondary);font-size:14px;}
 #search-input:focus{
   outline:none;
   background:var(--glass-light-hover);
   border-color:var(--accent);
   box-shadow:0 0 0 3px rgba(0,122,255,.15),var(--shadow-float);
 }
+.search-input-wrapper:focus-within .search-leading-icon{
+  color:var(--accent);
+}
+.search-clear-btn{
+  position:absolute;
+  right:10px;
+  width:24px;height:24px;
+  border-radius:50%;
+  border:none;background:transparent;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-secondary);
+  transition:transform .15s,opacity .15s;
+}
+.search-clear-btn:active{transform:scale(0.88);}
 html.dark #search-input{color:var(--text);}
 html.dark #search-input:focus{background:var(--glass-dark-hover);}
 
@@ -486,20 +514,21 @@ html.dark #search-history {
 /* Search results dropdown */
 #search-results{
   position:fixed;
-  top:calc(var(--safe-top) + 68px);
+  top:calc(var(--safe-top) + 64px);
   left:16px;right:16px;
   z-index:36;
   background:var(--glass-light);
   backdrop-filter:var(--blur-lg);
   -webkit-backdrop-filter:var(--blur-lg);
   border:1px solid var(--glass-light-border);
-  box-shadow:var(--shadow-float);
+  box-shadow:0 12px 36px rgba(0,0,0,0.18),var(--shadow-float);
   border-radius:var(--r-md);
   overflow:hidden;
-  max-height:260px;overflow-y:auto;
-  /* Scrollbar styles for search results */
+  max-height:340px;overflow-y:auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(150, 150, 150, 0.4) transparent;
+  display:none;
+  animation:slideDown .22s cubic-bezier(.34,1.2,.64,1);
 }
 #search-results::-webkit-scrollbar {
   width: 6px;
@@ -514,22 +543,91 @@ html.dark #search-history {
 html.dark #search-results::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
 }
-#search-results {
-  display:none;
-  animation:slideDown .2s cubic-bezier(.34,1.2,.64,1);
-}
 @keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
 .result-row{
-  padding:13px 16px;
-  font-size:14px;font-weight:400;
+  padding:12px 14px;
+  font-size:14px;
   color:var(--text);
-  border-bottom:1px solid rgba(60,60,67,.1);
-  cursor:pointer;transition:background .12s;
+  border-bottom:1px solid rgba(60,60,67,.08);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  transition:background .12s,transform .12s;
 }
 .result-row:last-child{border-bottom:none;}
-.result-row:active{background:rgba(0,122,255,.08);}
-.result-row .name{font-weight:500;}
-.result-row .sub{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+.result-row:hover{background:rgba(0,122,255,.05);}
+.result-row:active{background:rgba(0,122,255,.12);transform:scale(0.99);}
+.result-icon{
+  width:32px;height:32px;
+  border-radius:10px;
+  background:rgba(0,122,255,0.1);
+  color:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+html.dark .result-icon{
+  background:rgba(10,132,255,0.2);
+}
+.result-icon.coord-icon{
+  background:rgba(48,209,88,0.15);
+  color:var(--green);
+}
+.result-body{
+  flex:1;
+  min-width:0;
+}
+.result-row .name{
+  font-weight:600;
+  font-size:14.5px;
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.result-tag{
+  font-size:11px;
+  font-weight:500;
+  padding:2px 6px;
+  background:rgba(60,60,67,0.08);
+  color:var(--text-secondary);
+  border-radius:6px;
+  flex-shrink:0;
+}
+html.dark .result-tag{
+  background:rgba(255,255,255,0.1);
+  color:var(--text-secondary);
+}
+.result-row .sub{
+  font-size:12px;
+  color:var(--text-secondary);
+  margin-top:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  line-height:1.3;
+}
+.result-loading, .result-empty{
+  padding:20px;
+  text-align:center;
+  color:var(--text-secondary);
+  font-size:13.5px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.search-spinner{
+  width:16px;height:16px;
+  border:2px solid rgba(0,122,255,0.2);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 /* ═══════════════════════════════════════════════
    LAYER SWITCHER  (top right)
@@ -933,7 +1031,13 @@ html.dark #search-results::-webkit-scrollbar-thumb {
 
 <!-- Top search bar -->
 <div id="search-bar">
-  <input id="search-input" type="text" placeholder="搜索地点…" autocomplete="off" spellcheck="false">
+  <div class="search-input-wrapper">
+    <svg class="search-leading-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input id="search-input" type="text" placeholder="输入地名、商圈、小区搜索…" autocomplete="off" spellcheck="false">
+    <button id="search-clear-btn" class="search-clear-btn" aria-label="清空输入" style="display:none;">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="rgba(120,120,128,0.2)" stroke="none"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    </button>
+  </div>
   <button id="search-btn" aria-label="搜索">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
   </button>
@@ -1294,9 +1398,13 @@ function switchLayer(name){
 }
 
 /* ─── Search ─────────────────────────────────────────────── */
-var searchDebounce=null;
+var searchDebounceTimer = null;
 var searchHistory = [];
 var HISTORY_KEY = 'ios_loc_spoofer_history';
+var elSearchInput = $id('search-input');
+var elSearchClearBtn = $id('search-clear-btn');
+var elSearchResults = $id('search-results');
+var elSearchHistory = $id('search-history');
 
 function loadHistory() {
   try {
@@ -1305,7 +1413,7 @@ function loadHistory() {
   } catch(e){}
 }
 function saveHistory(query) {
-  if(!query.trim()) return;
+  if(!query || !query.trim()) return;
   query = query.trim();
   searchHistory = searchHistory.filter(function(q) { return q !== query; });
   searchHistory.unshift(query);
@@ -1314,9 +1422,8 @@ function saveHistory(query) {
   renderHistory();
 }
 function renderHistory() {
-  var container = $id('search-history');
   if(searchHistory.length === 0) {
-    container.innerHTML = '';
+    elSearchHistory.innerHTML = '';
     return;
   }
   var html = '';
@@ -1327,116 +1434,247 @@ function renderHistory() {
           + '</div>';
   });
   html += '<div class="history-clear" onclick="clearHistory(event)">清除历史记录</div>';
-  container.innerHTML = html;
+  elSearchHistory.innerHTML = html;
 }
 window.onHistoryClick = function(e, query) {
   if (e) e.stopPropagation();
-  $id('search-input').value = query;
-  doSearch();
-}
+  elSearchInput.value = query;
+  updateClearBtnVisibility();
+  doSearch(false);
+};
 window.clearHistory = function(e) {
   if (e) e.stopPropagation();
   searchHistory = [];
   localStorage.removeItem(HISTORY_KEY);
   renderHistory();
-  $id('search-input').focus();
+  elSearchHistory.classList.add('hidden');
+};
+
+function updateClearBtnVisibility() {
+  if (elSearchClearBtn) {
+    elSearchClearBtn.style.display = elSearchInput.value.trim() ? 'flex' : 'none';
+  }
 }
 
-function doSearch(){
-  var q=$id('search-input').value.trim();
-  if(!q)return;
-  saveHistory(q);
-  $id('search-input').blur(); // 取消焦点
-  $id('search-history').classList.add('hidden'); // 隐藏历史记录下拉
+function flyToLocation(dispLat, dispLng, name) {
+  map.flyTo([dispLat, dispLng], 16, {duration: 1.0, easeLinearity: 0.25});
+  elSearchResults.style.display = 'none';
+  elSearchHistory.classList.add('hidden');
+  elSearchInput.value = '';
+  updateClearBtnVisibility();
+  if (name) {
+    toast('📍 已定位至：' + name);
+  }
+}
 
+function doSearch(isAuto) {
+  var q = elSearchInput.value.trim();
+  if (!q) {
+    elSearchResults.style.display = 'none';
+    if (document.activeElement === elSearchInput && searchHistory.length > 0) {
+      elSearchHistory.classList.remove('hidden');
+    }
+    return;
+  }
+  
+  elSearchHistory.classList.add('hidden');
 
-  // 坐标直接跳转：支持 "lat, lng" 或 "lat lng" 格式
-  var coordMatch=q.match(/^\s*(-?\d+\.?\d*)\s*[,\s]\s*(-?\d+\.?\d*)\s*$/);
-  if(coordMatch){
-    var cLat=parseFloat(coordMatch[1]),cLng=parseFloat(coordMatch[2]);
-    if(cLat>=-90&&cLat<=90&&cLng>=-180&&cLng<=180){
-      var disp=(currentLayer==='osm'||currentLayer==='esri')?[cLat,cLng]:GCJ.w2g(cLat,cLng);
-      map.setView([disp[0],disp[1]],16,{animate:true});
-      $id('search-results').style.display='none';
-      $id('search-input').value='';
-      toast('已跳转到坐标 '+cLat.toFixed(5)+', '+cLng.toFixed(5));
-      return;
+  // 坐标直接跳转检测：支持 "lat, lng" 或 "lat lng"
+  var coordMatch = q.match(/^\s*(-?\d+\.?\d*)\s*[,\s]\s*(-?\d+\.?\d*)\s*$/);
+  if (coordMatch) {
+    var cLat = parseFloat(coordMatch[1]), cLng = parseFloat(coordMatch[2]);
+    if (cLat >= -90 && cLat <= 90 && cLng >= -180 && cLng <= 180) {
+      if (!isAuto) {
+        saveHistory(q);
+        var disp = (currentLayer === 'osm' || currentLayer === 'esri') ? [cLat, cLng] : GCJ.w2g(cLat, cLng);
+        flyToLocation(disp[0], disp[1], cLat.toFixed(4) + ', ' + cLng.toFixed(4));
+        return;
+      }
     }
   }
-  var box=$id('search-results');
-  box.innerHTML='<div class="result-row"><span class="name">搜索中…</span></div>';
-  box.style.display='block';
+
+  elSearchResults.innerHTML = '<div class="result-loading"><div class="search-spinner"></div><span>正在搜索地点…</span></div>';
+  elSearchResults.style.display = 'block';
 
   if (AMAP_KEY) {
-    fetch('https://restapi.amap.com/v3/assistant/inputtips?keywords='+encodeURIComponent(q)+'&key='+AMAP_KEY)
-      .then(function(r){return r.json();})
+    // 优先调用高德 inputtips 输入联想 API
+    fetch('https://restapi.amap.com/v3/assistant/inputtips?keywords=' + encodeURIComponent(q) + '&key=' + AMAP_KEY)
+      .then(function(r){ return r.json(); })
       .then(function(d){
-        box.innerHTML='';
-        if(d.status !== '1' || !d.tips || !d.tips.length){
-          box.innerHTML='<div class="result-row"><span class="name">未找到结果</span></div>';
-          return;
-        }
-        d.tips.forEach(function(it){
-          if (!it.location || typeof it.location !== 'string') return;
-          var row=document.createElement('div');row.className='result-row';
-          var locParts = it.location.split(',');
-          var gcjLng = parseFloat(locParts[0]);
-          var gcjLat = parseFloat(locParts[1]);
-          row.innerHTML='<div class="name">'+escHtml(it.name)+'</div>'
-                       +'<div class="sub">'+escHtml((it.district || '') + (it.address || ''))+'</div>';
-          row.addEventListener('click',function(){
-            var disp = (currentLayer === 'osm'||currentLayer === 'esri') ? GCJ.g2w(gcjLat, gcjLng) : [gcjLat, gcjLng];
-            map.setView([disp[0], disp[1]], 16, {animate:true});
-            box.style.display='none';
-            $id('search-input').value='';
-          });
-          box.appendChild(row);
-        });
-        if (!box.children.length) {
-          box.innerHTML='<div class="result-row"><span class="name">无有效定位结果</span></div>';
+        var tipsWithLoc = (d && d.tips) ? d.tips.filter(function(it){ return it.location && typeof it.location === 'string'; }) : [];
+        if (tipsWithLoc.length > 0) {
+          renderAMapResults(tipsWithLoc, q);
+        } else {
+          // 如果 inputtips 没有带坐标的精确 POI，自动降级调用高德 POI 深度搜索 API
+          fetch('https://restapi.amap.com/v3/place/text?keywords=' + encodeURIComponent(q) + '&key=' + AMAP_KEY + '&offset=10&page=1')
+            .then(function(r){ return r.json(); })
+            .then(function(pd){
+              if (pd && pd.pois && pd.pois.length > 0) {
+                renderAMapResults(pd.pois, q);
+              } else {
+                renderEmptyResult('未找到相关地点，请尝试输入更具体的名称');
+              }
+            }).catch(function(){
+              renderEmptyResult('搜索出错，请重试');
+            });
         }
       }).catch(function(){
-        box.innerHTML='<div class="result-row"><span class="name">搜索失败，请重试</span></div>';
+        renderEmptyResult('网络请求异常，请重试');
       });
   } else {
-    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=6&q='+encodeURIComponent(q))
-      .then(function(r){return r.json();})
+    // 降级使用 OpenStreetMap Nominatim
+    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=8&q=' + encodeURIComponent(q))
+      .then(function(r){ return r.json(); })
       .then(function(a){
-        box.innerHTML='';
-        if(!a||!a.length){
-          box.innerHTML='<div class="result-row"><span class="name">未找到结果 (国内搜索建议配置高德 Key)</span></div>';
+        if (!a || !a.length) {
+          renderEmptyResult('未找到结果 (国内搜索建议配置高德 Key)');
           return;
         }
+        elSearchResults.innerHTML = '';
         a.forEach(function(it){
-          var row=document.createElement('div');row.className='result-row';
-          var parts=it.display_name.split(',');
-          row.innerHTML='<div class="name">'+parts[0]+'</div>'
-                       +'<div class="sub">'+parts.slice(1,3).join(',')+'</div>';
-          row.addEventListener('click',function(){
-            var wLat=+it.lat,wLng=+it.lon;
-            var disp=(currentLayer==='osm'||currentLayer==='esri')?[wLat,wLng]:GCJ.w2g(wLat,wLng);
-            map.setView([disp[0], disp[1]], 16, {animate:true});
-            box.style.display='none';
-            $id('search-input').value='';
+          var row = document.createElement('div');
+          row.className = 'result-row';
+          var parts = it.display_name.split(',');
+          var title = parts[0];
+          var sub = parts.slice(1, 4).join(',');
+          row.innerHTML = '<div class="result-icon">'
+                        + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>'
+                        + '</div>'
+                        + '<div class="result-body">'
+                        + '<div class="name">' + escHtml(title) + '</div>'
+                        + '<div class="sub">' + escHtml(sub) + '</div>'
+                        + '</div>';
+          row.addEventListener('click', function(){
+            saveHistory(title);
+            var wLat = +it.lat, wLng = +it.lon;
+            var disp = (currentLayer === 'osm' || currentLayer === 'esri') ? [wLat, wLng] : GCJ.w2g(wLat, wLng);
+            flyToLocation(disp[0], disp[1], title);
           });
-          box.appendChild(row);
+          elSearchResults.appendChild(row);
         });
       }).catch(function(){
-        box.innerHTML='<div class="result-row"><span class="name">搜索失败，请重试</span></div>';
+        renderEmptyResult('搜索失败，请重试');
       });
   }
 }
-$id('search-btn').addEventListener('click',doSearch);
-$id('search-input').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
-$id('search-input').addEventListener('focus', function() {
-  if(searchHistory.length > 0) {
-    $id('search-history').classList.remove('hidden');
+
+function renderAMapResults(list, query) {
+  elSearchResults.innerHTML = '';
+  
+  // 如果是坐标格式，追加直达坐标条目
+  var coordMatch = query.match(/^\s*(-?\d+\.?\d*)\s*[,\s]\s*(-?\d+\.?\d*)\s*$/);
+  if (coordMatch) {
+    var cLat = parseFloat(coordMatch[1]), cLng = parseFloat(coordMatch[2]);
+    if (cLat >= -90 && cLat <= 90 && cLng >= -180 && cLng <= 180) {
+      var crow = document.createElement('div');
+      crow.className = 'result-row';
+      crow.innerHTML = '<div class="result-icon coord-icon">'
+                     + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>'
+                     + '</div>'
+                     + '<div class="result-body">'
+                     + '<div class="name">直达坐标 ' + cLat.toFixed(5) + ', ' + cLng.toFixed(5) + '</div>'
+                     + '<div class="sub">点击直接平滑定位到该坐标</div>'
+                     + '</div>';
+      crow.addEventListener('click', function(){
+        saveHistory(query);
+        var disp = (currentLayer === 'osm' || currentLayer === 'esri') ? [cLat, cLng] : GCJ.w2g(cLat, cLng);
+        flyToLocation(disp[0], disp[1], cLat.toFixed(4) + ', ' + cLng.toFixed(4));
+      });
+      elSearchResults.appendChild(crow);
+    }
+  }
+
+  list.forEach(function(it){
+    if (!it.location || typeof it.location !== 'string') return;
+    var locParts = it.location.split(',');
+    var gcjLng = parseFloat(locParts[0]);
+    var gcjLat = parseFloat(locParts[1]);
+    if (isNaN(gcjLng) || isNaN(gcjLat)) return;
+
+    var row = document.createElement('div');
+    row.className = 'result-row';
+    
+    var district = (it.district && typeof it.district === 'string') ? it.district : '';
+    var address = (it.address && typeof it.address === 'string') ? it.address : '';
+    var subText = (district + ' ' + address).trim() || '高德推荐地点';
+    var shortDistrict = district.split(/省|市/).pop() || district;
+    var tagHtml = shortDistrict ? '<span class="result-tag">' + escHtml(shortDistrict) + '</span>' : '';
+
+    row.innerHTML = '<div class="result-icon">'
+                  + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>'
+                  + '</div>'
+                  + '<div class="result-body">'
+                  + '<div class="name">' + escHtml(it.name) + tagHtml + '</div>'
+                  + '<div class="sub">' + escHtml(subText) + '</div>'
+                  + '</div>';
+
+    row.addEventListener('click', function(){
+      saveHistory(it.name);
+      var disp = (currentLayer === 'osm' || currentLayer === 'esri') ? GCJ.g2w(gcjLat, gcjLng) : [gcjLat, gcjLng];
+      flyToLocation(disp[0], disp[1], it.name);
+    });
+    elSearchResults.appendChild(row);
+  });
+
+  if (!elSearchResults.children.length) {
+    renderEmptyResult('无有效定位结果');
+  }
+}
+
+function renderEmptyResult(text) {
+  elSearchResults.innerHTML = '<div class="result-empty">'
+                            + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
+                            + '<span>' + escHtml(text) + '</span>'
+                            + '</div>';
+}
+
+// 实时输入自动联想防抖 (280ms)
+elSearchInput.addEventListener('input', function(){
+  updateClearBtnVisibility();
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  var val = elSearchInput.value.trim();
+  if (!val) {
+    elSearchResults.style.display = 'none';
+    if (searchHistory.length > 0) {
+      elSearchHistory.classList.remove('hidden');
+    }
+    return;
+  }
+  searchDebounceTimer = setTimeout(function(){
+    doSearch(true);
+  }, 280);
+});
+
+// 清空按钮点击
+if (elSearchClearBtn) {
+  elSearchClearBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    elSearchInput.value = '';
+    updateClearBtnVisibility();
+    elSearchResults.style.display = 'none';
+    elSearchInput.focus();
+    if (searchHistory.length > 0) {
+      elSearchHistory.classList.remove('hidden');
+    }
+  });
+}
+
+$id('search-btn').addEventListener('click', function(){ doSearch(false); });
+elSearchInput.addEventListener('keydown', function(e){
+  if (e.key === 'Enter') {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    doSearch(false);
   }
 });
-document.addEventListener('click',function(e){
-  if(!$id('search-bar').contains(e.target)&&!$id('search-results').contains(e.target)){
-    $id('search-results').style.display='none';
-    $id('search-history').classList.add('hidden');
+elSearchInput.addEventListener('focus', function() {
+  if (!elSearchInput.value.trim() && searchHistory.length > 0) {
+    elSearchHistory.classList.remove('hidden');
+  }
+});
+document.addEventListener('click', function(e){
+  if (!$id('search-bar').contains(e.target) && !elSearchResults.contains(e.target)) {
+    elSearchResults.style.display = 'none';
+    elSearchHistory.classList.add('hidden');
   }
 });
 
