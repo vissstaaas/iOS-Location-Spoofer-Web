@@ -3,7 +3,9 @@ export const DEFAULT_LOC = {
   longitude:          116.39748,
   altitude:           44,
   horizontalAccuracy: 39,
-  verticalAccuracy:   1000
+  verticalAccuracy:   1000,
+  jitter:             true,
+  address:            '北京市东城区 · 天安门广场'
 };
 
 export function authOk(request, env) {
