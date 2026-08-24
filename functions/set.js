@@ -1,4 +1,77 @@
-import { DEFAULT_LOC, authOk, jsonResponse, errorResponse, corsHeaders } from './_utils.js';
+import { DEFAULT_LOC, authOk, jsonResponse, errorResponse, corsHeaders, gcj2wgs, outOfChina } from './_utils.js';
+
+export async function onRequestGet(context) {
+  const { request, env } = context;
+
+  if (!authOk(request, env)) {
+    return errorResponse('unauthorized', 401);
+  }
+
+  const url = new URL(request.url);
+  const qLat = url.searchParams.get('lat') || url.searchParams.get('latitude') || url.searchParams.get('ll');
+  const qLng = url.searchParams.get('lng') || url.searchParams.get('longitude') || url.searchParams.get('lon');
+  const rawUrl = url.searchParams.get('url') || url.searchParams.get('text') || '';
+  const name = url.searchParams.get('name') || url.searchParams.get('address') || url.searchParams.get('q') || url.searchParams.get('title') || 'Apple 地图选点';
+  const coordType = (url.searchParams.get('coord_type') || 'gcj02').toLowerCase();
+
+  let targetLat = null;
+  let targetLng = null;
+
+  // 1. 直接传递经纬度参数
+  if (qLat && qLng) {
+    targetLat = parseFloat(qLat);
+    targetLng = parseFloat(qLng);
+  } else if (qLat && qLat.includes(',')) {
+    const parts = qLat.split(',');
+    targetLat = parseFloat(parts[0]);
+    targetLng = parseFloat(parts[1]);
+  } else if (rawUrl) {
+    // 2. 从 Apple Maps 分享 URL 解析: maps.apple.com/?ll=39.90872,116.39748
+    const llMatch = rawUrl.match(/[?&]ll=([-\d.]+),([-\d.]+)/i) || rawUrl.match(/([-\d.]+)\s*,\s*([-\d.]+)/);
+    if (llMatch) {
+      targetLat = parseFloat(llMatch[1]);
+      targetLng = parseFloat(llMatch[2]);
+    }
+  }
+
+  if (isNaN(targetLat) || isNaN(targetLng) || targetLat === null || targetLng === null) {
+    return errorResponse('缺少有效的经纬度坐标。示例: /set?lat=39.9087&lng=116.3975&name=天安门', 400);
+  }
+
+  // 中国大陆 Apple 地图为 GCJ-02，转换为小火箭 GPS 使用的真实 WGS-84
+  let wgsLat = targetLat;
+  let wgsLng = targetLng;
+  if (coordType === 'gcj02' || (!outOfChina(targetLat, targetLng) && coordType !== 'wgs84')) {
+    const w = gcj2wgs(targetLat, targetLng);
+    wgsLat = w[0];
+    wgsLng = w[1];
+  }
+
+  let current = DEFAULT_LOC;
+  if (env.SPOOFER_DATA) {
+    current = await env.SPOOFER_DATA.get('loc', { type: 'json' }) || DEFAULT_LOC;
+  }
+
+  const updated = {
+    ...current,
+    latitude: wgsLat,
+    longitude: wgsLng,
+    address: name
+  };
+
+  if (env.SPOOFER_DATA) {
+    await env.SPOOFER_DATA.put('loc', JSON.stringify(updated));
+  }
+
+  return jsonResponse({
+    ok: true,
+    message: `📍 定位已成功锁定至：${name}`,
+    name: name,
+    wgs84: { latitude: wgsLat, longitude: wgsLng },
+    original: { latitude: targetLat, longitude: targetLng, coord_type: coordType },
+    loc: updated
+  });
+}
 
 export async function onRequestPost(context) {
   const { request, env } = context;
