@@ -250,6 +250,141 @@ html.dark .config-code-box{background:rgba(0,0,0,0.35);color:var(--text);border-
   max-height:110px;overflow-y:auto;margin-bottom:10px;
 }
 
+/* ═══════════════════════════════════════════════
+   ADMIN BUTTON & PANEL
+═══════════════════════════════════════════════ */
+#admin-btn{
+  position:fixed;
+  top:calc(var(--safe-top) + 180px);
+  left:16px;
+  z-index:20;
+  width:44px;height:44px;
+  background:var(--glass-light);
+  backdrop-filter:var(--blur-md);
+  -webkit-backdrop-filter:var(--blur-md);
+  border:1px solid var(--glass-light-border);
+  box-shadow:var(--shadow-float);
+  border-radius:var(--r-sm);
+  cursor:pointer;display:none;align-items:center;justify-content:center;
+  transition:transform .15s;
+  color:#FF9500;
+}
+#admin-btn:active{transform:scale(.92);}
+.admin-badge{
+  position:absolute;top:-4px;right:-4px;
+  background:#FF9500;color:#fff;
+  font-size:8px;font-weight:800;
+  height:14px;border-radius:7px;padding:0 4px;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid #fff;text-transform:uppercase;
+}
+
+#admin-panel{
+  position:fixed;
+  top:0;left:0;bottom:0;
+  width:min(380px,94vw);
+  z-index:40;
+  background:var(--glass-light);
+  backdrop-filter:var(--blur-lg);
+  -webkit-backdrop-filter:var(--blur-lg);
+  border-right:1px solid var(--glass-light-border);
+  box-shadow:4px 0 40px rgba(0,0,0,0.18);
+  transform:translateX(-110%);
+  transition:transform .35s cubic-bezier(.32,0,.67,0);
+  display:flex;flex-direction:column;
+}
+#admin-panel.open{
+  transform:translateX(0);
+  transition-timing-function:cubic-bezier(.34,1.2,.64,1);
+}
+#admin-panel-header{
+  padding:calc(var(--safe-top) + 16px) 16px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(60,60,67,.1);
+}
+#admin-panel-header h2{font-size:18px;font-weight:700;color:var(--text);}
+#admin-close{
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(60,60,67,.1);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+#admin-close:active{background:rgba(60,60,67,.2);}
+#admin-content{flex:1;overflow-y:auto;padding:16px;}
+
+.admin-card{
+  background:rgba(255,255,255,0.65);
+  border:1px solid rgba(60,60,67,0.12);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.04);
+}
+html.dark .admin-card{
+  background:rgba(30,30,35,0.7);
+  border-color:rgba(255,255,255,0.1);
+}
+.admin-card-title{
+  font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;
+}
+.admin-form .form-group{margin-bottom:12px;}
+.admin-form label{font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;}
+.admin-form input, .admin-select{
+  width:100%;height:38px;padding:0 12px;
+  font-size:14px;color:var(--text);
+  background:rgba(255,255,255,0.8);
+  border:1px solid rgba(60,60,67,0.18);
+  border-radius:9px;outline:none;
+}
+html.dark .admin-form input, html.dark .admin-select{
+  background:rgba(0,0,0,0.3);
+  border-color:rgba(255,255,255,0.15);
+  color:var(--text);
+}
+.admin-form input:focus, .admin-select:focus{border-color:var(--accent);}
+.btn-text{
+  background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;padding:2px 4px;
+}
+.btn-text:active{opacity:0.6;}
+.admin-primary-btn{
+  width:100%;height:40px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:10px;
+  font-size:14px;font-weight:600;
+  cursor:pointer;margin-top:6px;
+  box-shadow:0 3px 12px rgba(0,122,255,0.25);
+  transition:transform .12s,background .12s;
+}
+.admin-primary-btn:active{transform:scale(0.98);background:var(--accent-hover);}
+
+.admin-user-card{
+  background:rgba(255,255,255,0.7);
+  border:1px solid rgba(60,60,67,0.1);
+  border-radius:12px;padding:12px;margin-bottom:10px;
+  display:flex;flex-direction:column;gap:8px;
+}
+html.dark .admin-user-card{
+  background:rgba(0,0,0,0.25);border-color:rgba(255,255,255,0.08);
+}
+.user-card-header{display:flex;justify-content:space-between;align-items:center;}
+.user-card-name{font-size:14px;font-weight:700;color:var(--text);}
+.user-card-token{font-family:monospace;font-size:12px;color:var(--accent);background:rgba(0,122,255,0.08);padding:2px 6px;border-radius:6px;}
+.user-card-meta{font-size:11.5px;color:var(--text-secondary);display:flex;justify-content:space-between;align-items:center;}
+.user-status-badge{font-size:11px;font-weight:600;padding:2px 6px;border-radius:6px;}
+.user-status-badge.active{background:rgba(52,199,89,0.15);color:#34C759;}
+.user-status-badge.expired{background:rgba(255,59,48,0.15);color:#FF3B30;}
+.user-status-badge.disabled{background:rgba(142,142,147,0.15);color:#8E8E93;}
+.user-card-actions{display:flex;gap:6px;margin-top:2px;border-top:1px solid rgba(60,60,67,0.06);padding-top:8px;}
+.user-act-btn{
+  flex:1;height:30px;font-size:12px;font-weight:600;
+  border-radius:6px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.user-act-btn.copy{background:rgba(0,122,255,0.1);color:var(--accent);}
+.user-act-btn.extend{background:rgba(52,199,89,0.1);color:#34C759;}
+.user-act-btn.del{background:rgba(255,59,48,0.1);color:#FF3B30;max-width:36px;}
+.user-act-btn:active{transform:scale(0.96);}
+.admin-empty{text-align:center;padding:24px 12px;color:var(--text-secondary);font-size:13px;}
+
 
 /* ═══════════════════════════════════════════════
    MAP (full viewport)
@@ -1190,6 +1325,12 @@ html.dark .result-tag{
   <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
 </button>
 
+<!-- Left: Admin button (visible only for admin) -->
+<button id="admin-btn" aria-label="用户管理后台">
+  <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color:#FF9500;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+  <span class="admin-badge">Admin</span>
+</button>
+
 <!-- Right: Layer switcher -->
 <button id="layer-btn" aria-label="切换地图">
   <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
@@ -1292,6 +1433,61 @@ html.dark .result-tag{
           深色模式
         </div>
         <div class="toggle-switch" id="dark-toggle-switch"><div class="toggle-knob"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin user management panel -->
+<div id="admin-panel">
+  <div id="admin-panel-header">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:18px;">👑</span>
+      <h2>用户卡密与权限管理</h2>
+    </div>
+    <button id="admin-close" aria-label="关闭">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <div id="admin-content">
+    <!-- Create User Card -->
+    <div class="admin-card">
+      <div class="admin-card-title">➕ 发放新用户访问码</div>
+      <div class="admin-form">
+        <div class="form-group">
+          <label>用户备注名称</label>
+          <input type="text" id="admin-new-name" placeholder="如：同事老王、客户小李" maxlength="20">
+        </div>
+        <div class="form-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label>专属访问码 (Token)</label>
+            <button type="button" id="admin-btn-random" class="btn-text">🎲 随机生成</button>
+          </div>
+          <input type="text" id="admin-new-token" placeholder="如：wang666" maxlength="32">
+        </div>
+        <div class="form-group">
+          <label>设置有效期限</label>
+          <select id="admin-new-days" class="admin-select">
+            <option value="3">3 天体验</option>
+            <option value="7">7 天</option>
+            <option value="30" selected>30 天 (1个月)</option>
+            <option value="90">90 天 (1季度)</option>
+            <option value="365">365 天 (1年)</option>
+            <option value="0">永久有效 (无限制)</option>
+          </select>
+        </div>
+        <button id="admin-btn-create" class="admin-primary-btn">立即创建并生成直达链接</button>
+      </div>
+    </div>
+
+    <!-- User List Card -->
+    <div class="admin-card" style="margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="admin-card-title" style="margin-bottom:0;">👥 已发放用户 (<span id="admin-user-count">0</span>)</div>
+        <button id="admin-btn-refresh" class="btn-text">🔄 刷新</button>
+      </div>
+      <div id="admin-user-list">
+        <div class="admin-empty">正在加载用户数据…</div>
       </div>
     </div>
   </div>
@@ -2411,17 +2607,190 @@ if (btnCopyShortcut) {
 elOverlay.addEventListener('click', function(){
   closeFavPanel();
   closeConfigPanel();
+  closeAdminPanel();
   $id('layer-menu').style.display='none';
 });
 
-/* ─── Security login checks (30 days expiration) ─────────── */
+/* ─── Admin Panel logic ────────────────────────────────── */
+var adminPanelOpen = false;
+function openAdminPanel() {
+  adminPanelOpen = true;
+  $id('admin-panel').classList.add('open');
+  elOverlay.classList.add('visible');
+  loadAdminUsers();
+}
+function closeAdminPanel() {
+  adminPanelOpen = false;
+  $id('admin-panel').classList.remove('open');
+  if (!configPanelOpen && !favPanelOpen) elOverlay.classList.remove('visible');
+}
+var adminBtn = $id('admin-btn');
+if (adminBtn) adminBtn.addEventListener('click', function(e){
+  e.stopPropagation();
+  adminPanelOpen ? closeAdminPanel() : openAdminPanel();
+});
+var adminClose = $id('admin-close');
+if (adminClose) adminClose.addEventListener('click', closeAdminPanel);
+
+function generateRandomToken() {
+  var chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  var res = '';
+  for (var i = 0; i < 6; i++) {
+    res += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  $id('admin-new-token').value = res;
+}
+var btnRandom = $id('admin-btn-random');
+if (btnRandom) btnRandom.addEventListener('click', generateRandomToken);
+
+function loadAdminUsers() {
+  var tokenVal = localStorage.getItem('gps_token') || TOKEN || '';
+  $id('admin-user-list').innerHTML = '<div class="admin-empty">正在加载用户数据…</div>';
+  fetch(window.location.origin + '/admin_users?token=' + encodeURIComponent(tokenVal))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.ok) throw new Error(d.error || '加载失败');
+      $id('admin-user-count').textContent = d.total || 0;
+      renderAdminUserList(d.users || []);
+    })
+    .catch(function(err){
+      $id('admin-user-list').innerHTML = '<div class="admin-empty" style="color:#FF3B30;">加载失败: ' + err.message + '</div>';
+    });
+}
+
+function renderAdminUserList(users) {
+  var listEl = $id('admin-user-list');
+  if (!users.length) {
+    listEl.innerHTML = '<div class="admin-empty">暂无发放的用户，填写上方表单立即新建</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  users.forEach(function(u){
+    var item = document.createElement('div');
+    item.className = 'admin-user-card';
+    var statusHtml = '';
+    if (!u.enabled) {
+      statusHtml = '<span class="user-status-badge disabled">已暂停</span>';
+    } else if (u.remainingDays === 0) {
+      statusHtml = '<span class="user-status-badge expired">今日到期</span>';
+    } else if (u.remainingDays !== null && u.remainingDays < 0) {
+      statusHtml = '<span class="user-status-badge expired">已过期</span>';
+    } else if (u.remainingDays !== null) {
+      statusHtml = '<span class="user-status-badge active">剩余 ' + u.remainingDays + ' 天</span>';
+    } else {
+      statusHtml = '<span class="user-status-badge active">永久有效</span>';
+    }
+
+    var link = window.location.origin + '/?code=' + encodeURIComponent(u.token);
+
+    item.innerHTML = '<div class="user-card-header">'
+                   + '<span class="user-card-name">' + escHtml(u.name) + '</span>'
+                   + '<span class="user-card-token">' + escHtml(u.token) + '</span>'
+                   + '</div>'
+                   + '<div class="user-card-meta">'
+                   + '<span>创建于 ' + new Date(u.createdAt).toLocaleDateString() + '</span>'
+                   + statusHtml
+                   + '</div>'
+                   + '<div class="user-card-actions">'
+                   + '<button class="user-act-btn copy">📋 复制链接</button>'
+                   + '<button class="user-act-btn extend">➕ 续期30天</button>'
+                   + '<button class="user-act-btn del" title="删除">🗑️</button>'
+                   + '</div>';
+
+    item.querySelector('.copy').addEventListener('click', function(){
+      navigator.clipboard.writeText(link).then(function(){
+        toast('专属免密直达链接已复制！');
+      });
+    });
+    item.querySelector('.extend').addEventListener('click', function(){
+      extendUser(u.token, 30);
+    });
+    item.querySelector('.del').addEventListener('click', function(){
+      if (confirm('确定删除用户【' + u.name + ' (' + u.token + ')】吗？其专属定位将失效。')) {
+        deleteUser(u.token);
+      }
+    });
+
+    listEl.appendChild(item);
+  });
+}
+
+function createAdminUser() {
+  var name = $id('admin-new-name').value.trim();
+  var token = $id('admin-new-token').value.trim();
+  var days = parseInt($id('admin-new-days').value, 10);
+  if (!name) { toast('请输入用户备注名称'); return; }
+  if (!token) { toast('请输入访问码 (Token)'); return; }
+
+  var adminToken = localStorage.getItem('gps_token') || TOKEN || '';
+  fetch(window.location.origin + '/admin_users?token=' + encodeURIComponent(adminToken), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name, token: token, days: days })
+  }).then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.ok) throw new Error(d.error || '创建失败');
+      toast('用户访问码创建成功！');
+      $id('admin-new-name').value = '';
+      $id('admin-new-token').value = '';
+      loadAdminUsers();
+      var link = window.location.origin + '/?code=' + encodeURIComponent(token);
+      navigator.clipboard.writeText(link).then(function(){
+        toast('已自动复制该用户的专属直达链接');
+      });
+    }).catch(function(err){
+      toast('创建失败: ' + err.message);
+    });
+}
+var btnCreateUser = $id('admin-btn-create');
+if (btnCreateUser) btnCreateUser.addEventListener('click', createAdminUser);
+
+function extendUser(targetToken, days) {
+  var adminToken = localStorage.getItem('gps_token') || TOKEN || '';
+  fetch(window.location.origin + '/admin_users?token=' + encodeURIComponent(adminToken), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: targetToken, addDays: days })
+  }).then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.ok) throw new Error(d.error || '续期失败');
+      toast('已成功为用户续期 ' + days + ' 天！');
+      loadAdminUsers();
+    }).catch(function(err){
+      toast('续期失败: ' + err.message);
+    });
+}
+
+function deleteUser(targetToken) {
+  var adminToken = localStorage.getItem('gps_token') || TOKEN || '';
+  fetch(window.location.origin + '/admin_users?token=' + encodeURIComponent(adminToken) + '&user=' + encodeURIComponent(targetToken), {
+    method: 'DELETE'
+  }).then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.ok) throw new Error(d.error || '删除失败');
+      toast('用户已彻底删除');
+      loadAdminUsers();
+    }).catch(function(err){
+      toast('删除失败: ' + err.message);
+    });
+}
+var btnRefreshUsers = $id('admin-btn-refresh');
+if (btnRefreshUsers) btnRefreshUsers.addEventListener('click', loadAdminUsers);
+
+/* ─── Security login checks (Multi-user & Expiry) ─────────── */
+var isCurrentUserAdmin = false;
+var currentUserInfo = null;
+
 function verifyToken(token, callback) {
   fetch(window.location.origin + '/verify?token=' + encodeURIComponent(token))
     .then(function(r) {
-      if (r.status === 200) callback(true);
-      else callback(false);
+      if (r.status === 200) {
+        return r.json().then(function(d){ callback(true, d); });
+      } else {
+        return r.json().then(function(d){ callback(false, d); }).catch(function(){ callback(false, null); });
+      }
     })
-    .catch(function() { callback(false); });
+    .catch(function() { callback(false, null); });
 }
 
 function showLoginScreen(onSuccess) {
@@ -2435,28 +2804,35 @@ function showLoginScreen(onSuccess) {
   function attemptLogin() {
     var val = input.value.trim();
     if (!val) {
-      toast('请输入密码');
+      toast('请输入访问密钥 (Token / 专属码)');
       return;
     }
     submit.disabled = true;
     submit.textContent = '验证中...';
-    verifyToken(val, function(ok) {
+    verifyToken(val, function(ok, data) {
       submit.disabled = false;
       submit.textContent = '进入系统';
       if (ok) {
-        // Cache token for 30 days
-        var session = {
-          token: val,
-          expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 days
-        };
+        isCurrentUserAdmin = data && data.isAdmin;
+        currentUserInfo = data;
         localStorage.setItem('gps_token', val);
-        localStorage.setItem('gps_session', JSON.stringify(session));
+        localStorage.setItem('gps_session', JSON.stringify({ token: val, isAdmin: isCurrentUserAdmin, expiresAt: data ? data.expiresAt : null }));
         
         overlay.style.display = 'none';
+        if (isCurrentUserAdmin && adminBtn) {
+          adminBtn.style.display = 'flex';
+        }
         onSuccess(val);
-        toast('登录成功，有效期30天');
+        if (isCurrentUserAdmin) {
+          toast('欢迎管理员登录');
+        } else if (data && data.expiresAt) {
+          var remDays = Math.max(0, Math.ceil((data.expiresAt - Date.now()) / (86400 * 1000)));
+          toast('登录成功！账号有效期剩余 ' + remDays + ' 天');
+        } else {
+          toast('登录成功');
+        }
       } else {
-        toast('密码错误，请重新输入');
+        toast((data && data.error) ? data.error : '访问码错误或已过期');
         input.value = '';
         input.focus();
       }
@@ -2470,40 +2846,40 @@ function showLoginScreen(onSuccess) {
 }
 
 function handleAuthentication(onAuthenticated) {
-  if (!TOKEN) {
-    // Open access, no token required
-    $id('login-overlay').style.display = 'none';
-    localStorage.removeItem('gps_token');
-    localStorage.removeItem('gps_session');
-    onAuthenticated('');
+  // Check if token or code is in URL query (?code=xxx or ?token=xxx)
+  var urlParams = new URLSearchParams(window.location.search);
+  var urlCode = urlParams.get('code') || urlParams.get('token');
+  if (urlCode) {
+    localStorage.setItem('gps_token', urlCode.trim());
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  var cachedToken = localStorage.getItem('gps_token') || TOKEN || '';
+  if (!cachedToken) {
+    showLoginScreen(onAuthenticated);
     return;
   }
-  
-  var session = {};
-  try {
-    session = JSON.parse(localStorage.getItem('gps_session') || '{}');
-  } catch(e) {}
-  
-  if (session.token && session.expiresAt && session.expiresAt > Date.now()) {
-    verifyToken(session.token, function(ok) {
-      if (ok) {
-        $id('login-overlay').style.display = 'none';
-        onAuthenticated(session.token);
-      } else {
-        showLoginScreen(onAuthenticated);
+
+  verifyToken(cachedToken, function(ok, data) {
+    if (ok) {
+      $id('login-overlay').style.display = 'none';
+      isCurrentUserAdmin = data && data.isAdmin;
+      currentUserInfo = data;
+      if (isCurrentUserAdmin && adminBtn) {
+        adminBtn.style.display = 'flex';
       }
-    });
-  } else {
-    showLoginScreen(onAuthenticated);
-  }
+      onAuthenticated(cachedToken);
+    } else {
+      showLoginScreen(onAuthenticated);
+    }
+  });
 }
 
 /* ─── Init: load current coords from server ─────────────── */
 handleAuthentication(function(activeToken) {
-  // Update API URL helper with cached token dynamically
   API = function(p) {
     var t = activeToken || localStorage.getItem('gps_token') || TOKEN || '';
-    return p + (t ? '?token=' + encodeURIComponent(t) : '');
+    return p + (t ? (p.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(t) : '');
   };
 
   fetch(API('/loc.json'))
@@ -2533,7 +2909,6 @@ handleAuthentication(function(activeToken) {
       loadFavorites();
     })
     .catch(function(){
-      // fallback: Beijing
       initMap(39.90872,116.39748);
       updateLockedPin(39.90872,116.39748);
       updateBubble();
@@ -2541,7 +2916,7 @@ handleAuthentication(function(activeToken) {
       loadHistory();
       renderHistory();
       loadFavorites();
-      toast('无法连接服务器，请检查 Token');
+      toast('无法连接服务器，请检查访问码');
     });
 });
 

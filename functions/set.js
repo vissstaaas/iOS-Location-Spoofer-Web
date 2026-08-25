@@ -1,10 +1,11 @@
-import { DEFAULT_LOC, authOk, jsonResponse, errorResponse, corsHeaders, gcj2wgs, outOfChina } from './_utils.js';
+import { DEFAULT_LOC, getUserAuth, jsonResponse, errorResponse, corsHeaders, gcj2wgs, outOfChina } from './_utils.js';
 
 export async function onRequestGet(context) {
   const { request, env } = context;
 
-  if (!authOk(request, env)) {
-    return errorResponse('unauthorized', 401);
+  const auth = await getUserAuth(request, env);
+  if (!auth.ok) {
+    return errorResponse(auth.error || 'unauthorized', 401);
   }
 
   const url = new URL(request.url);
@@ -26,7 +27,7 @@ export async function onRequestGet(context) {
     targetLat = parseFloat(parts[0]);
     targetLng = parseFloat(parts[1]);
   } else if (rawUrl) {
-    // 2. 从 Apple Maps 分享 URL 解析: maps.apple.com/?ll=39.90872,116.39748
+    // 2. 从 Apple Maps 分享 URL 解析
     const llMatch = rawUrl.match(/[?&]ll=([-\d.]+),([-\d.]+)/i) || rawUrl.match(/([-\d.]+)\s*,\s*([-\d.]+)/);
     if (llMatch) {
       targetLat = parseFloat(llMatch[1]);
@@ -48,8 +49,9 @@ export async function onRequestGet(context) {
   }
 
   let current = DEFAULT_LOC;
+  const locKey = auth.token === 'master' ? 'loc' : `loc:${auth.token}`;
   if (env.SPOOFER_DATA) {
-    current = await env.SPOOFER_DATA.get('loc', { type: 'json' }) || DEFAULT_LOC;
+    current = await env.SPOOFER_DATA.get(locKey, { type: 'json' }) || DEFAULT_LOC;
   }
 
   const updated = {
@@ -60,7 +62,7 @@ export async function onRequestGet(context) {
   };
 
   if (env.SPOOFER_DATA) {
-    await env.SPOOFER_DATA.put('loc', JSON.stringify(updated));
+    await env.SPOOFER_DATA.put(locKey, JSON.stringify(updated));
   }
 
   return jsonResponse({
@@ -76,16 +78,18 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  if (!authOk(request, env)) {
-    return errorResponse('unauthorized', 401);
+  const auth = await getUserAuth(request, env);
+  if (!auth.ok) {
+    return errorResponse(auth.error || 'unauthorized', 401);
   }
 
   try {
     const data = await request.json();
     let current = DEFAULT_LOC;
+    const locKey = auth.token === 'master' ? 'loc' : `loc:${auth.token}`;
 
     if (env.SPOOFER_DATA) {
-      current = await env.SPOOFER_DATA.get('loc', { type: 'json' }) || DEFAULT_LOC;
+      current = await env.SPOOFER_DATA.get(locKey, { type: 'json' }) || DEFAULT_LOC;
     }
 
     const updated = { ...current };
@@ -98,7 +102,7 @@ export async function onRequestPost(context) {
     if (typeof data.address            === 'string')  updated.address            = data.address;
 
     if (env.SPOOFER_DATA) {
-      await env.SPOOFER_DATA.put('loc', JSON.stringify(updated));
+      await env.SPOOFER_DATA.put(locKey, JSON.stringify(updated));
     }
 
     return jsonResponse(updated);

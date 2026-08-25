@@ -1,15 +1,17 @@
-import { authOk, jsonResponse, errorResponse, corsHeaders } from '../_utils.js';
+import { getUserAuth, jsonResponse, errorResponse, corsHeaders } from '../_utils.js';
 
 export async function onRequestGet(context) {
   const { request, env } = context;
 
-  if (!authOk(request, env)) {
-    return errorResponse('unauthorized', 401);
+  const auth = await getUserAuth(request, env);
+  if (!auth.ok) {
+    return errorResponse(auth.error || 'unauthorized', 401);
   }
 
   let favs = [];
+  const favKey = auth.token === 'master' ? 'favorites' : `fav:${auth.token}`;
   if (env.SPOOFER_DATA) {
-    favs = await env.SPOOFER_DATA.get('favorites', { type: 'json' }) || [];
+    favs = await env.SPOOFER_DATA.get(favKey, { type: 'json' }) || [];
   }
 
   return jsonResponse(favs);
@@ -18,15 +20,17 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  if (!authOk(request, env)) {
-    return errorResponse('unauthorized', 401);
+  const auth = await getUserAuth(request, env);
+  if (!auth.ok) {
+    return errorResponse(auth.error || 'unauthorized', 401);
   }
 
   try {
     const data = await request.json();
     let favs = [];
+    const favKey = auth.token === 'master' ? 'favorites' : `fav:${auth.token}`;
     if (env.SPOOFER_DATA) {
-      favs = await env.SPOOFER_DATA.get('favorites', { type: 'json' }) || [];
+      favs = await env.SPOOFER_DATA.get(favKey, { type: 'json' }) || [];
     }
 
     const fav = {
@@ -44,13 +48,20 @@ export async function onRequestPost(context) {
     if (favs.length > 100) favs.pop();
 
     if (env.SPOOFER_DATA) {
-      await env.SPOOFER_DATA.put('favorites', JSON.stringify(favs));
+      await env.SPOOFER_DATA.put(favKey, JSON.stringify(favs));
     }
 
     return jsonResponse(fav);
   } catch (err) {
     return errorResponse('bad json');
   }
+}
+
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders()
+  });
 }
 
 export async function onRequestOptions() {

@@ -1,13 +1,19 @@
-import { authOk, jsonResponse, errorResponse, corsHeaders } from './_utils.js';
+import { getUserAuth, jsonResponse, errorResponse, corsHeaders } from './_utils.js';
 
 export async function onRequestGet(context) {
   const { request, env } = context;
 
-  if (!authOk(request, env)) {
-    return errorResponse('unauthorized', 401);
+  const auth = await getUserAuth(request, env);
+  if (!auth.ok) {
+    return errorResponse(auth.error || 'unauthorized', 401);
   }
 
-  return jsonResponse({ ok: true });
+  return jsonResponse({
+    ok: true,
+    isAdmin: auth.isAdmin,
+    name: auth.user ? auth.user.name : '',
+    expiresAt: auth.user ? auth.user.expiresAt : null
+  });
 }
 
 export async function onRequestOptions() {

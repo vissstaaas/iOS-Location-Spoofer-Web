@@ -1,15 +1,17 @@
-import { DEFAULT_LOC, authOk, jsonResponse, errorResponse, corsHeaders } from './_utils.js';
+import { DEFAULT_LOC, getUserAuth, jsonResponse, errorResponse, corsHeaders } from './_utils.js';
 
 export async function onRequestGet(context) {
   const { request, env } = context;
 
-  if (!authOk(request, env)) {
-    return errorResponse('unauthorized', 401);
+  const auth = await getUserAuth(request, env);
+  if (!auth.ok) {
+    return errorResponse(auth.error || 'unauthorized', 401);
   }
 
   let loc = DEFAULT_LOC;
+  const locKey = auth.token === 'master' ? 'loc' : `loc:${auth.token}`;
   if (env.SPOOFER_DATA) {
-    loc = await env.SPOOFER_DATA.get('loc', { type: 'json' }) || DEFAULT_LOC;
+    loc = await env.SPOOFER_DATA.get(locKey, { type: 'json' }) || DEFAULT_LOC;
   }
 
   // 智能微漂移 (±1.5米自然硬件级波动与海拔轻微波动)
