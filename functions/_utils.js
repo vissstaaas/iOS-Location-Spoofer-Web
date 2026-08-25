@@ -8,41 +8,58 @@ export const DEFAULT_LOC = {
   address:            '北京市东城区 · 天安门广场'
 };
 
-export async function getUserAuth(request, env) {
-  const url = new URL(request.url);
-  const token = url.searchParams.get('token') || url.searchParams.get('code') || '';
-  const masterToken = env.ADMIN_TOKEN || env.TOKEN || '';
-
-  // 1. If no master token is set in env at all, allow as admin
-  if (!masterToken && !token) {
-    return { ok: true, isAdmin: true, token: 'master', user: { name: '管理员', expiresAt: null } };
+export async function getUserAuth(contextOrRequest, env, params) {
+  let request, envObj, paramsObj;
+  if (contextOrRequest && contextOrRequest.request && contextOrRequest.env) {
+    request = contextOrRequest.request;
+    envObj = contextOrRequest.env;
+    paramsObj = contextOrRequest.params || {};
+  } else {
+    request = contextOrRequest;
+    envObj = env || {};
+    paramsObj = params || {};
   }
 
-  // 2. Check if token matches Master Admin Token
+  const url = new URL(request.url);
+  // 1. Path param: /u/:user
+  let token = paramsObj.user || '';
+  if (!token) {
+    // 2. Query param: ?token= or ?code=
+    token = url.searchParams.get('token') || url.searchParams.get('code') || '';
+  }
+
+  const masterToken = envObj.ADMIN_TOKEN || envObj.TOKEN || '';
+
+  // 1. If matches Master Admin Token -> Admin
   if (masterToken && token === masterToken) {
     return { ok: true, isAdmin: true, token: 'master', user: { name: '超级管理员', expiresAt: null } };
   }
 
-  if (!token) {
-    return { ok: false, isAdmin: false, error: '未提供访问凭证 (Token)' };
+  // 2. If no master token set and token is master/empty -> default admin
+  if (!masterToken && (!token || token === 'master')) {
+    return { ok: true, isAdmin: true, token: 'master', user: { name: '管理员', expiresAt: null } };
   }
 
-  // 3. Check KV multi-user metadata
-  if (env.SPOOFER_DATA) {
-    const usersMap = await env.SPOOFER_DATA.get('users_meta', { type: 'json' }) || {};
+  if (!token) {
+    return { ok: false, isAdmin: false, error: '未提供访问专属码或凭证' };
+  }
+
+  // 3. Check KV users_meta table
+  if (envObj.SPOOFER_DATA) {
+    const usersMap = await envObj.SPOOFER_DATA.get('users_meta', { type: 'json' }) || {};
     const user = usersMap[token];
     if (user) {
       if (user.enabled === false) {
-        return { ok: false, isAdmin: false, error: '该访问码已被管理员暂停使用' };
+        return { ok: false, isAdmin: false, error: '该专属链接已被管理员暂停使用', user: user, isPaused: true };
       }
       if (user.expiresAt && user.expiresAt < Date.now()) {
-        return { ok: false, isAdmin: false, error: '该访问码已到期，请联系管理员续期' };
+        return { ok: false, isAdmin: false, error: '该专属链接已到期，请联系管理员续期', user: user, isExpired: true };
       }
       return { ok: true, isAdmin: false, token: token, user: user };
     }
   }
 
-  return { ok: false, isAdmin: false, error: '访问码不存在或已失效' };
+  return { ok: false, isAdmin: false, error: '专属链接不存在或已失效' };
 }
 
 export function authOk(request, env) {

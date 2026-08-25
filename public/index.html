@@ -2564,12 +2564,20 @@ function openConfigPanel() {
   
   // Dynamically build paths
   var domain = window.location.origin;
+  var isUser = CFG && CFG.isUserView;
+  var userKey = (CFG && CFG.user) || '';
   var tokenVal = localStorage.getItem('gps_token') || TOKEN || '';
   
   // Format links
-  var moduleUrl = domain + '/ios-location-spoofer.sgmodule?token=' + encodeURIComponent(tokenVal);
-  var argText = 'configUrl=' + domain + '/loc.json?token=' + encodeURIComponent(tokenVal);
-  var shortcutUrl = domain + '/set?token=' + encodeURIComponent(tokenVal);
+  var moduleUrl = isUser
+    ? domain + '/u/' + encodeURIComponent(userKey) + '/ios-location-spoofer.sgmodule'
+    : domain + '/ios-location-spoofer.sgmodule' + (tokenVal ? '?token=' + encodeURIComponent(tokenVal) : '');
+  var argText = isUser
+    ? 'configUrl=' + domain + '/u/' + encodeURIComponent(userKey) + '/loc.json'
+    : 'configUrl=' + domain + '/loc.json' + (tokenVal ? '?token=' + encodeURIComponent(tokenVal) : '');
+  var shortcutUrl = isUser
+    ? domain + '/u/' + encodeURIComponent(userKey) + '/set'
+    : domain + '/set' + (tokenVal ? '?token=' + encodeURIComponent(tokenVal) : '');
   
   $id('config-url-text').textContent = moduleUrl;
   $id('config-arg-text').textContent = argText;
@@ -2770,7 +2778,7 @@ function loadAdminUsers() {
 function renderAdminUserList(users) {
   var listEl = $id('admin-user-list');
   if (!users.length) {
-    listEl.innerHTML = '<div class="admin-empty">暂无发放的用户，填写上方表单立即新建</div>';
+    listEl.innerHTML = '<div class="admin-empty">暂无发放的专属后缀，填写上方表单立即新建</div>';
     return;
   }
   listEl.innerHTML = '';
@@ -2779,22 +2787,22 @@ function renderAdminUserList(users) {
     item.className = 'admin-user-card';
     var statusHtml = '';
     if (!u.enabled) {
-      statusHtml = '<span class="user-status-badge disabled">已暂停</span>';
+      statusHtml = '<span class="user-status-badge disabled">⏸️ 已暂停</span>';
     } else if (u.remainingDays === 0) {
-      statusHtml = '<span class="user-status-badge expired">今日到期</span>';
+      statusHtml = '<span class="user-status-badge expired">⚠️ 今日到期</span>';
     } else if (u.remainingDays !== null && u.remainingDays < 0) {
-      statusHtml = '<span class="user-status-badge expired">已过期</span>';
+      statusHtml = '<span class="user-status-badge expired">🚫 已过期</span>';
     } else if (u.remainingDays !== null) {
-      statusHtml = '<span class="user-status-badge active">剩余 ' + u.remainingDays + ' 天</span>';
+      statusHtml = '<span class="user-status-badge active">🟢 剩余 ' + u.remainingDays + ' 天</span>';
     } else {
-      statusHtml = '<span class="user-status-badge active">永久有效</span>';
+      statusHtml = '<span class="user-status-badge active">🟢 永久有效</span>';
     }
 
-    var link = window.location.origin + '/?code=' + encodeURIComponent(u.token);
+    var link = window.location.origin + '/u/' + encodeURIComponent(u.token);
 
     item.innerHTML = '<div class="user-card-header">'
                    + '<span class="user-card-name">' + escHtml(u.name) + '</span>'
-                   + '<span class="user-card-token">' + escHtml(u.token) + '</span>'
+                   + '<span class="user-card-token">/u/' + escHtml(u.token) + '</span>'
                    + '</div>'
                    + '<div class="user-card-meta">'
                    + '<span>创建于 ' + new Date(u.createdAt).toLocaleDateString() + '</span>'
@@ -2802,25 +2810,28 @@ function renderAdminUserList(users) {
                    + '</div>'
                    + '<div class="user-card-actions">'
                    + '<button class="user-act-btn copy">📋 复制链接</button>'
-                   + '<button class="user-act-btn preview" title="切换到该用户视角">👁️ 预览</button>'
+                   + '<button class="user-act-btn preview" title="新标签页打开预览">👁️ 预览</button>'
+                   + '<button class="user-act-btn toggle" title="暂停或恢复权限">' + (u.enabled ? '⏸️ 暂停' : '▶️ 启用') + '</button>'
                    + '<button class="user-act-btn extend">➕ 续期30天</button>'
-                   + '<button class="user-act-btn del" title="删除">🗑️</button>'
+                   + '<button class="user-act-btn del" title="彻底删除">🗑️</button>'
                    + '</div>';
 
     item.querySelector('.copy').addEventListener('click', function(){
       navigator.clipboard.writeText(link).then(function(){
-        toast('专属免密直达链接已复制！');
+        toast('专属后缀链接已复制：' + link);
       });
     });
     item.querySelector('.preview').addEventListener('click', function(){
-      localStorage.setItem('gps_token', u.token);
-      location.reload();
+      window.open(link, '_blank');
+    });
+    item.querySelector('.toggle').addEventListener('click', function(){
+      toggleUserStatus(u.token, !u.enabled);
     });
     item.querySelector('.extend').addEventListener('click', function(){
       extendUser(u.token, 30);
     });
     item.querySelector('.del').addEventListener('click', function(){
-      if (confirm('确定删除用户【' + u.name + ' (' + u.token + ')】吗？其专属定位将失效。')) {
+      if (confirm('确定彻底销毁用户【' + u.name + ' (/u/' + u.token + ')】吗？\n删除后该后缀及定位数据将立即失效！')) {
         deleteUser(u.token);
       }
     });
@@ -2829,14 +2840,30 @@ function renderAdminUserList(users) {
   });
 }
 
+function toggleUserStatus(targetToken, enabled) {
+  var adminToken = localStorage.getItem('gps_admin_token') || localStorage.getItem('gps_token') || TOKEN || '';
+  fetch(window.location.origin + '/admin_users?token=' + encodeURIComponent(adminToken), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: targetToken, enabled: enabled })
+  }).then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.ok) throw new Error(d.error || '操作失败');
+      toast(enabled ? '已恢复该用户权限' : '已暂停该用户访问');
+      loadAdminUsers();
+    }).catch(function(err){
+      toast('操作失败: ' + err.message);
+    });
+}
+
 function createAdminUser() {
   var name = $id('admin-new-name').value.trim();
   var token = $id('admin-new-token').value.trim();
   var days = parseInt($id('admin-new-days').value, 10);
   if (!name) { toast('请输入用户备注名称'); return; }
-  if (!token) { toast('请输入访问码 (Token)'); return; }
+  if (!token) { toast('请输入专属后缀 (如 wang666)'); return; }
 
-  var adminToken = localStorage.getItem('gps_token') || TOKEN || '';
+  var adminToken = localStorage.getItem('gps_admin_token') || localStorage.getItem('gps_token') || TOKEN || '';
   fetch(window.location.origin + '/admin_users?token=' + encodeURIComponent(adminToken), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -2844,13 +2871,13 @@ function createAdminUser() {
   }).then(function(r){ return r.json(); })
     .then(function(d){
       if (!d.ok) throw new Error(d.error || '创建失败');
-      toast('用户访问码创建成功！');
+      toast('专属后缀创建成功！');
       $id('admin-new-name').value = '';
       $id('admin-new-token').value = '';
       loadAdminUsers();
-      var link = window.location.origin + '/?code=' + encodeURIComponent(token);
+      var link = window.location.origin + '/u/' + encodeURIComponent(token);
       navigator.clipboard.writeText(link).then(function(){
-        toast('已自动复制该用户的专属直达链接');
+        toast('已复制专属链接：' + link);
       });
     }).catch(function(err){
       toast('创建失败: ' + err.message);
@@ -2860,7 +2887,7 @@ var btnCreateUser = $id('admin-btn-create');
 if (btnCreateUser) btnCreateUser.addEventListener('click', createAdminUser);
 
 function extendUser(targetToken, days) {
-  var adminToken = localStorage.getItem('gps_token') || TOKEN || '';
+  var adminToken = localStorage.getItem('gps_admin_token') || localStorage.getItem('gps_token') || TOKEN || '';
   fetch(window.location.origin + '/admin_users?token=' + encodeURIComponent(adminToken), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -2876,13 +2903,13 @@ function extendUser(targetToken, days) {
 }
 
 function deleteUser(targetToken) {
-  var adminToken = localStorage.getItem('gps_token') || TOKEN || '';
+  var adminToken = localStorage.getItem('gps_admin_token') || localStorage.getItem('gps_token') || TOKEN || '';
   fetch(window.location.origin + '/admin_users?token=' + encodeURIComponent(adminToken) + '&user=' + encodeURIComponent(targetToken), {
     method: 'DELETE'
   }).then(function(r){ return r.json(); })
     .then(function(d){
       if (!d.ok) throw new Error(d.error || '删除失败');
-      toast('用户已彻底删除');
+      toast('用户已彻底销毁');
       loadAdminUsers();
     }).catch(function(err){
       toast('删除失败: ' + err.message);
@@ -2983,14 +3010,18 @@ function handleAuthentication(onAuthenticated) {
 }
 
 /* ─── Init: load current coords from server ─────────────── */
-handleAuthentication(function(activeToken) {
+if (CFG && CFG.isUserView) {
+  // Direct scoped access for /u/:user
+  if (adminBtn) adminBtn.style.display = 'none';
   API = function(p) {
-    var t = activeToken || localStorage.getItem('gps_token') || TOKEN || '';
-    return p + (t ? (p.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(t) : '');
+    return '/u/' + encodeURIComponent(CFG.user) + p;
   };
-
+  
   fetch(API('/loc.json'))
-    .then(function(r){return r.json();})
+    .then(function(r){
+      if (r.status === 403) throw new Error('链接已过期或被暂停');
+      return r.json();
+    })
     .then(function(d){
       WGS={lat:d.latitude||39.90872,lng:d.longitude||116.39748};
       lockedWGS={lat:WGS.lat,lng:WGS.lng};
@@ -3014,18 +3045,62 @@ handleAuthentication(function(activeToken) {
       loadHistory();
       renderHistory();
       loadFavorites();
+      if (CFG.expiresAt) {
+        var rem = Math.max(0, Math.ceil((CFG.expiresAt - Date.now()) / (86400 * 1000)));
+        toast('🟢 欢迎使用专属定位通道（剩余 ' + rem + ' 天）');
+      } else {
+        toast('🟢 欢迎使用专属定位通道');
+      }
     })
-    .catch(function(){
-      initMap(39.90872,116.39748);
-      updateLockedPin(39.90872,116.39748);
-      updateBubble();
-      updateStatus();
-      loadHistory();
-      renderHistory();
-      loadFavorites();
-      toast('无法连接服务器，请检查访问码');
+    .catch(function(err){
+      toast('访问失败: ' + err.message);
     });
-});
+} else {
+  // Master Admin root access
+  handleAuthentication(function(activeToken) {
+    API = function(p) {
+      var t = activeToken || localStorage.getItem('gps_token') || TOKEN || '';
+      return p + (t ? (p.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(t) : '');
+    };
+
+    fetch(API('/loc.json'))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        WGS={lat:d.latitude||39.90872,lng:d.longitude||116.39748};
+        lockedWGS={lat:WGS.lat,lng:WGS.lng};
+        lockedAddress=d.address||'';
+        currentAddress=d.address||'';
+        if (d.jitter !== undefined) {
+          isJitterEnabled = d.jitter;
+          if(elJitterSwitch) elJitterSwitch.classList.toggle('on', isJitterEnabled);
+        }
+        altitude=d.altitude||null;
+        hacc=d.horizontalAccuracy||39;
+        vacc=d.verticalAccuracy||1000;
+        $id('inp-hacc').placeholder=hacc;
+        $id('inp-vacc').placeholder=vacc;
+        if(altitude!==null)$id('inp-alt').placeholder=Math.round(altitude);
+        initMap(WGS.lat,WGS.lng);
+        if(!currentAddress) fetchReverseGeocode(WGS.lat, WGS.lng);
+        updateLockedPin(lockedWGS.lat, lockedWGS.lng);
+        updateBubble();
+        updateStatus();
+        loadHistory();
+        renderHistory();
+        loadFavorites();
+      })
+      .catch(function(){
+        initMap(39.90872,116.39748);
+        updateLockedPin(39.90872,116.39748);
+        updateBubble();
+        updateStatus();
+        loadHistory();
+        renderHistory();
+        loadFavorites();
+        toast('无法连接服务器，请检查访问码');
+      });
+  });
+}
 
 initAvatarSystem();
 
