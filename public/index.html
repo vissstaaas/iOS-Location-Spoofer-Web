@@ -265,7 +265,7 @@ html.dark .config-code-box{background:rgba(0,0,0,0.35);color:var(--text);border-
   border:1px solid var(--glass-light-border);
   box-shadow:var(--shadow-float);
   border-radius:var(--r-sm);
-  cursor:pointer;display:none;align-items:center;justify-content:center;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
   transition:transform .15s;
   color:#FF9500;
 }
@@ -1425,6 +1425,11 @@ html.dark .result-tag{
           <input type="file" id="avatar-file-input" accept="image/*" style="display:none;">
         </div>
       </div>
+    </div>
+    <div class="config-section">
+      <div class="config-title">👑 用户管理与卡密发号</div>
+      <div class="config-desc">管理多用户访问权限、发放专属访问码、设置有效期限或延期。</div>
+      <button class="config-action-btn" id="btn-open-admin-from-config" style="background:#FF9500;box-shadow:0 4px 16px rgba(255,149,0,0.35);">👑 打开用户发号控制台</button>
     </div>
     <div class="config-section" style="border-bottom:none;">
       <div id="dark-toggle">
@@ -2624,13 +2629,44 @@ function closeAdminPanel() {
   $id('admin-panel').classList.remove('open');
   if (!configPanelOpen && !favPanelOpen) elOverlay.classList.remove('visible');
 }
+
+function requestAdminAccessAndOpen() {
+  if (isCurrentUserAdmin) {
+    if (configPanelOpen) closeConfigPanel();
+    openAdminPanel();
+    return;
+  }
+  var pwd = prompt('请输入管理员主密钥 (Admin Token) 解锁发号后台：');
+  if (!pwd) return;
+  verifyToken(pwd.trim(), function(ok, data){
+    if (ok && data && data.isAdmin) {
+      isCurrentUserAdmin = true;
+      localStorage.setItem('gps_token', pwd.trim());
+      localStorage.setItem('gps_session', JSON.stringify({ token: pwd.trim(), isAdmin: true }));
+      toast('👑 管理员身份验证成功！');
+      if (configPanelOpen) closeConfigPanel();
+      openAdminPanel();
+    } else {
+      toast('密码错误或无管理员权限');
+    }
+  });
+}
+
 var adminBtn = $id('admin-btn');
 if (adminBtn) adminBtn.addEventListener('click', function(e){
   e.stopPropagation();
-  adminPanelOpen ? closeAdminPanel() : openAdminPanel();
+  adminPanelOpen ? closeAdminPanel() : requestAdminAccessAndOpen();
 });
 var adminClose = $id('admin-close');
 if (adminClose) adminClose.addEventListener('click', closeAdminPanel);
+
+var btnOpenAdminFromConfig = $id('btn-open-admin-from-config');
+if (btnOpenAdminFromConfig) {
+  btnOpenAdminFromConfig.addEventListener('click', function(e){
+    e.stopPropagation();
+    requestAdminAccessAndOpen();
+  });
+}
 
 function generateRandomToken() {
   var chars = 'abcdefghjkmnpqrstuvwxyz23456789';
@@ -2855,19 +2891,12 @@ function handleAuthentication(onAuthenticated) {
   }
 
   var cachedToken = localStorage.getItem('gps_token') || TOKEN || '';
-  if (!cachedToken) {
-    showLoginScreen(onAuthenticated);
-    return;
-  }
-
+  
   verifyToken(cachedToken, function(ok, data) {
     if (ok) {
       $id('login-overlay').style.display = 'none';
       isCurrentUserAdmin = data && data.isAdmin;
       currentUserInfo = data;
-      if (isCurrentUserAdmin && adminBtn) {
-        adminBtn.style.display = 'flex';
-      }
       onAuthenticated(cachedToken);
     } else {
       showLoginScreen(onAuthenticated);
